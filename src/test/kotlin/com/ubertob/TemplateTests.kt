@@ -15,9 +15,6 @@ class TemplateTests {
                 Template("""{title} {surname}""")
             )
 
-        renderTemplate.tagsToReplace.let { println(it) }
-
-
         val tags: Tags = { x ->
             when (x) {
                 "{title}" -> "Mr"

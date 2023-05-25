@@ -5,23 +5,26 @@ import com.ubertob.kondor.outcome.OutcomeError
 
 
 data class Text(val value: String)
+fun String.asText(): Text = Text(this)
+
 data class Template(val value: String)
 
 typealias Tags = (String) -> String?
 
 data class RenderTemplate(val template: Template) : (Tags) -> Text {
 
-    val tagsToReplace = findAllTags(template)
+    val tagRegex = """\{(.*?)}""".toRegex()
 
     override fun invoke(tags: Tags): Text =
+        tagRegex.replace(template.value){
+            mr -> tags(mr.value).orEmpty()
+        }.asText()
 
-        tagsToReplace.fold(
-            template.value
-        ) { text, tag -> text.replace(tag, tags(tag).orEmpty()) }
-            .asText()
+//        tagsToReplace.fold(
+//            template.value
+//        ) { text, tag -> text.replace(tag, tags(tag).orEmpty()) }
+//            .asText()
 
-
-    private fun String.asText(): Text = Text(this)
 
     companion object {
         fun String.renderWith(tags: Tags): Text =
@@ -30,16 +33,8 @@ data class RenderTemplate(val template: Template) : (Tags) -> Text {
 }
 
 
-val tagRegex = """\{(.*?)}""".toRegex()
+
 
 data class TemplateError(override val msg: String) : OutcomeError
 
 typealias TemplateOutcome = Outcome<TemplateError, Template>
-
-//private fun Template.checkUnchanged(): TemplateOutcome =
-//    failUnless(tagRegex.containsMatchIn(this)) {
-//        TemplateError("Mappings missing for tags: ${findAllTags(this)}")
-//    }
-
-private fun findAllTags(text: Template): Set<String> =
-    tagRegex.findAll(text.value).map(MatchResult::value).toSet()
