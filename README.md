@@ -1,4 +1,4 @@
 # templatefun
-A functional library to do templating
+A functional library to generate text from a template.
 
-see blog post
+see the blog post
