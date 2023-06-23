@@ -11,7 +11,9 @@ data class Template(val value: String)
 
 typealias Tags = (String) -> String?
 
-data class RenderTemplate(val template: Template) : (Tags) -> Text {
+typealias Renderer = (Tags) -> Text
+
+data class RenderTemplate(val template: Template) : Renderer {
 
     val tagRegex = """\{(.*?)}""".toRegex()
 
@@ -31,9 +33,6 @@ data class RenderTemplate(val template: Template) : (Tags) -> Text {
             RenderTemplate(Template(this))(tags)
     }
 }
-
-
-
 
 data class TemplateError(override val msg: String) : OutcomeError
 
