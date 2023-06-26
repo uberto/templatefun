@@ -1,7 +1,8 @@
 package com.ubertob
 
-import com.ubertob.templatefun.RenderTemplate.Companion.renderWith
+import com.ubertob.templatefun.RenderTemplate
 import com.ubertob.templatefun.Tags
+import com.ubertob.templatefun.asTemplate
 import org.junit.jupiter.api.Test
 import strikt.api.expectThat
 import strikt.assertions.isEqualTo
@@ -32,3 +33,6 @@ class AcceptanceTest {
         expectThat(text).isEqualTo(expected) //test the result
     }
 }
+
+private fun String.renderWith(tags: Tags): String =
+    RenderTemplate(this.asTemplate())(tags)

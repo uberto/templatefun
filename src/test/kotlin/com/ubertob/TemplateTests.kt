@@ -47,19 +47,16 @@ class TemplateTests {
 
     }
 
+    val titleTag = StringTag("title".asTagName(), "Mr")
+    val surnameTag = StringTag("surname".asTagName(), "Barbini")
+
     @Test
     fun `replace simple strings`() {
         val renderTemplate = RenderTemplate(
             Template("""{title} {surname}""")
         )
 
-        val tags: Tags = { x ->
-            when (x) {
-                TagName("{title}") -> StringTag(TagName("{title}"), "Mr")
-                TagName("{surname}") -> StringTag(TagName("{surname}"), "Barbini")
-                else -> null.also { println("not found $x") }
-            }
-        }
+        val tags = tags(titleTag, surnameTag)
 
         val text = renderTemplate(tags)
 
@@ -68,18 +65,16 @@ class TemplateTests {
         expectThat(text).isEqualTo(expected)
     }
 
+    private fun tags(vararg tags: Tag): Tags =
+        tags.map { it.name to it }.toMap()::get
+
     @Test
     fun `missing replacement tag`() {
         val fullNameTemplate = Template("""{title} {surname}""")
 
         val renderer = RenderTemplate(fullNameTemplate)
 
-        val tags: Tags = { x ->
-            when (x) {
-                TagName("{title}") -> StringTag(TagName("{title}"), "Mr")
-                else -> null
-            }
-        }
+        val tags = tags(titleTag)
 
         val text = renderer(tags)
 
@@ -87,5 +82,44 @@ class TemplateTests {
 
         expectThat(text).isEqualTo(expected)
     }
+
+    @Test
+    fun `replace elements from a list`() {
+        val renderTemplate = RenderTemplate(
+            Template(
+                """{title} {surname} order:
+                |{items} {qty} of {itemname} {/items}
+                |Total: {total}
+            """.trimMargin()
+            )
+        )
+
+        val items = listOf(
+            4 to "glasses",
+            12 to "plates"
+        )
+
+        val itemsTags = items.map { (qty, name) ->
+            tags(
+                StringTag("qty".asTagName(), qty.toString()),
+                StringTag("itemname".asTagName(), name)
+            )
+        }
+        val listTag = ListTag("items".asTagName(), itemsTags)
+        val totalTag = StringTag("total".asTagName(), "16")
+
+
+        val tags = tags(titleTag, surnameTag, totalTag, listTag)
+
+        val text = renderTemplate(tags)
+
+        val expected = """Mr Barbini order:
+              | 4 of glasses 
+              | 12 of plates 
+              |Total: 16""".trimMargin()
+
+        expectThat(text).isEqualTo(expected)
+    }
+
 
 }
