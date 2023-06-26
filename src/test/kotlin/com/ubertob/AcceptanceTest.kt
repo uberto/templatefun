@@ -29,6 +29,6 @@ class AcceptanceTest {
     Thank you very much Uberto.
 """.trimIndent()
 
-        expectThat(text.value).isEqualTo(expected) //test the result
+        expectThat(text).isEqualTo(expected) //test the result
     }
 }

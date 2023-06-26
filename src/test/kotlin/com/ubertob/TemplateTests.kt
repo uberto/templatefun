@@ -1,8 +1,6 @@
 package com.ubertob
 
-import com.ubertob.templatefun.RenderTemplate
-import com.ubertob.templatefun.Tags
-import com.ubertob.templatefun.Template
+import com.ubertob.templatefun.*
 import org.junit.jupiter.api.Test
 import strikt.api.expectThat
 import strikt.assertions.isEqualTo
@@ -17,7 +15,7 @@ class TemplateTests {
         val templateStr = """{a} {b} {c} {d} {e}"""
 
         val matched = allTagsRegex.findAll(templateStr)
-            .map {it.value.substring(1,2) }
+            .map { it.value.substring(1, 2) }
             .joinToString(separator = ",")
 
         expectThat(matched).isEqualTo("a,b,c,d,e")
@@ -49,18 +47,17 @@ class TemplateTests {
 
     }
 
-
     @Test
     fun `replace simple strings`() {
         val renderTemplate = RenderTemplate(
-                Template("""{title} {surname}""")
-            )
+            Template("""{title} {surname}""")
+        )
 
         val tags: Tags = { x ->
             when (x) {
-                "{title}" -> "Mr"
-                "{surname}" -> "Barbini"
-                else -> null
+                TagName("{title}") -> StringTag(TagName("{title}"), "Mr")
+                TagName("{surname}") -> StringTag(TagName("{surname}"), "Barbini")
+                else -> null.also { println("not found $x") }
             }
         }
 
@@ -68,7 +65,7 @@ class TemplateTests {
 
         val expected = "Mr Barbini"
 
-        expectThat(text.value).isEqualTo(expected)
+        expectThat(text).isEqualTo(expected)
     }
 
     @Test
@@ -79,7 +76,7 @@ class TemplateTests {
 
         val tags: Tags = { x ->
             when (x) {
-                "{title}" -> "Mr"
+                TagName("{title}") -> StringTag(TagName("{title}"), "Mr")
                 else -> null
             }
         }
@@ -88,7 +85,7 @@ class TemplateTests {
 
         val expected = "Mr "
 
-        expectThat(text.value).isEqualTo(expected)
+        expectThat(text).isEqualTo(expected)
     }
 
 }
