@@ -1,8 +1,6 @@
 package com.ubertob
 
-import com.ubertob.templatefun.RenderTemplate
-import com.ubertob.templatefun.Tags
-import com.ubertob.templatefun.asTemplate
+import com.ubertob.templatefun.*
 import org.junit.jupiter.api.Test
 import strikt.api.expectThat
 import strikt.assertions.isEqualTo
@@ -18,7 +16,16 @@ class AcceptanceTest {
     Thank you very much {name}.
 """.trimIndent() //the text template
 
-        val tags: Tags = { null } //tags to be replaced like "title"= "Mr"...
+        val tasks = listOf(
+            tags("id" tag "1", "taskname" tag "buy the paint", "due" tag "today"),
+            tags("id" tag "2", "taskname" tag "paint the wall", "due" tag "tomorrow")
+        )
+        val tags = tags(
+            "title" tag "Mr",
+            "surname" tag "Barbini",
+            "name" tag "Uberto",
+            "tasks" tag tasks
+        )
 
         val text = template.renderWith(tags) //the actual magic
 

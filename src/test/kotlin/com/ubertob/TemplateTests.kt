@@ -117,9 +117,38 @@ class TemplateTests {
         expectThat(text).isEqualTo(expected)
     }
 
-    fun tags(vararg tags: Tag): Tags =
-        tags.map { it.name to it }.toMap()::get
+    @Test
+    fun `template with optional text`() {
+        val renderTemplate = RenderTemplate(
+            Template(
+                """{title} {surname}, 
+                |thanks for your order.
+                |{isxmas}Merry Christmas!{/isxmas}""".trimMargin()
+            )
+        )
 
-    infix fun String.tag(value: String) = StringTag(this.asTagName(), value)
-    infix fun String.tag(value: List<Tags>) = ListTag(this.asTagName(), value)
+        val isxmas = "isxmas" tag true
+        val tags = tags(titleTag, surnameTag, isxmas)
+
+        val xmasText = renderTemplate(tags)
+
+        val xmasExpected = """Mr Barbini, 
+              |thanks for your order.
+              |Merry Christmas!""".trimMargin()
+
+        expectThat(xmasText).isEqualTo(xmasExpected)
+
+        val isnotxmas = "isxmas" tag false
+
+        val notXmasText = renderTemplate(tags(titleTag, surnameTag, isnotxmas))
+
+        val notXmasExpected = """Mr Barbini, 
+              |thanks for your order.
+              |""".trimMargin()
+
+        expectThat(notXmasText).isEqualTo(notXmasExpected)
+
+    }
+
 }
+

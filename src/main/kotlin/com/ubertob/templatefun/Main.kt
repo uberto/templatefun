@@ -44,7 +44,21 @@ data class ListTag(override val name: TagName, val subTags: List<Tags>) : Tag() 
 
 }
 
-//data class OptionalTag(val bool: Boolean) : Tag()
+
+data class OptionalTag(override val name: TagName, val show: Boolean) : Tag() {
+    private val strippedTag = name.value.drop(1).dropLast(1)
+    private val tagRegex = """\{$strippedTag}(.*?)\{/$strippedTag}"""
+        .toRegex(RegexOption.DOT_MATCHES_ALL)
+
+    private fun MatchResult.stripTags(): String =
+        value.drop(name.value.length)
+            .dropLast(name.value.length + 1)
+
+    override fun invoke(template: Template): Template =
+        template.text.replace(tagRegex) {
+            if (show) it.stripTags() else ""
+        }.asTemplate()
+}
 
 
 data class RenderTemplate(val template: Template) : Renderer {
@@ -69,4 +83,11 @@ data class RenderTemplate(val template: Template) : Renderer {
         }.text
 
 }
+
+fun tags(vararg tags: Tag): Tags =
+    tags.map { it.name to it }.toMap()::get
+
+infix fun String.tag(value: String) = StringTag(this.asTagName(), value)
+infix fun String.tag(value: List<Tags>) = ListTag(this.asTagName(), value)
+infix fun String.tag(show: Boolean) = OptionalTag(this.asTagName(), show)
 
