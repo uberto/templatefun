@@ -1,9 +1,5 @@
 package com.ubertob.templatefun
 
-import com.ubertob.kondor.outcome.Outcome
-import com.ubertob.kondor.outcome.OutcomeError
-
-
 data class Template(val text: String)
 
 fun String.asTemplate() = Template(this)
@@ -28,21 +24,22 @@ data class StringTag(override val name: TagName, val text: String?) : Tag() {
 
 data class ListTag(override val name: TagName, val subTags: List<Tags>) : Tag() {
 
-    val strippedTag = name.value.drop(1).dropLast(1)
+    private val strippedTag = name.value.drop(1).dropLast(1)
+    private val tagRegex = """\{$strippedTag}(.*?)\{/$strippedTag}"""
+        .toRegex(RegexOption.DOT_MATCHES_ALL)
+
     private fun generateMulti(subTemplate: Template): String =
-        subTags.joinToString(separator = "\n", transform = {
+        subTags.joinToString(separator = "\n") {
             RenderTemplate(subTemplate)(it)
-        })
+        }
 
-    private val tagRegex =
-        """\{$strippedTag}(.*?)\{/$strippedTag}""".toRegex(RegexOption.DOT_MATCHES_ALL)
-
-    private fun String.stripTags(tagName: TagName): String =
-        substring(tagName.value.length, length - tagName.value.length - 1)
+    private fun MatchResult.asSubtemplate(): Template =
+        value.drop(name.value.length)
+            .dropLast(name.value.length + 1).asTemplate()
 
     override fun invoke(template: Template): Template =
         template.text.replace(tagRegex) {
-            generateMulti(it.value.stripTags(name).asTemplate())
+            generateMulti(it.asSubtemplate())
         }.asTemplate()
 
 }
@@ -54,9 +51,8 @@ data class RenderTemplate(val template: Template) : Renderer {
 
     val tagRegex = """\{(.*?)}""".toRegex()
 
-    val tagsToReplace =
-        tagRegex.findAll(template.text)
-            .map { TagName(it.value) }.toSet()
+    val tagsToReplace = tagRegex.findAll(template.text)
+        .map { TagName(it.value) }.toSet()
 
     private fun replaceTag(currTempl: Template, tagName: TagName, tag: Tag?): Template =
         when (tag) {
@@ -74,7 +70,3 @@ data class RenderTemplate(val template: Template) : Renderer {
 
 }
 
-
-data class TemplateError(override val msg: String) : OutcomeError
-
-typealias TemplateOutcome = Outcome<TemplateError, Template>

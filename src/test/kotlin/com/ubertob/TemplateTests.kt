@@ -47,8 +47,8 @@ class TemplateTests {
 
     }
 
-    val titleTag = StringTag("title".asTagName(), "Mr")
-    val surnameTag = StringTag("surname".asTagName(), "Barbini")
+    val titleTag = "title" tag "Mr"
+    val surnameTag = "surname" tag "Barbini"
 
     @Test
     fun `replace simple strings`() {
@@ -65,8 +65,6 @@ class TemplateTests {
         expectThat(text).isEqualTo(expected)
     }
 
-    private fun tags(vararg tags: Tag): Tags =
-        tags.map { it.name to it }.toMap()::get
 
     @Test
     fun `missing replacement tag`() {
@@ -85,41 +83,43 @@ class TemplateTests {
 
     @Test
     fun `replace elements from a list`() {
-        val renderTemplate = RenderTemplate(
-            Template(
-                """{title} {surname} order:
+        val renderer = RenderTemplate(
+            """{title} {surname} order:
                 |{items} {qty} of {itemname} {/items}
-                |Total: {total}
-            """.trimMargin()
-            )
+                |Total: {total} pieces
+            """.trimMargin().asTemplate()
         )
 
-        val items = listOf(
-            4 to "glasses",
-            12 to "plates"
-        )
-
-        val itemsTags = items.map { (qty, name) ->
+        val itemsTags = listOf(
+            " 4" to "glasses",
+            "12" to "plates"
+        ).map { (qty, name) ->
             tags(
-                StringTag("qty".asTagName(), qty.toString()),
-                StringTag("itemname".asTagName(), name)
+                "qty" tag qty,
+                "itemname" tag name
             )
         }
-        val listTag = ListTag("items".asTagName(), itemsTags)
-        val totalTag = StringTag("total".asTagName(), "16")
 
+        val tags = tags(
+            "title" tag "Mr",
+            "surname" tag "Barbini",
+            "total" tag "16",
+            "items" tag itemsTags
+        )
 
-        val tags = tags(titleTag, surnameTag, totalTag, listTag)
-
-        val text = renderTemplate(tags)
+        val text = renderer(tags)
 
         val expected = """Mr Barbini order:
-              | 4 of glasses 
+              |  4 of glasses 
               | 12 of plates 
-              |Total: 16""".trimMargin()
+              |Total: 16 pieces""".trimMargin()
 
         expectThat(text).isEqualTo(expected)
     }
 
+    fun tags(vararg tags: Tag): Tags =
+        tags.map { it.name to it }.toMap()::get
 
+    infix fun String.tag(value: String) = StringTag(this.asTagName(), value)
+    infix fun String.tag(value: List<Tags>) = ListTag(this.asTagName(), value)
 }
